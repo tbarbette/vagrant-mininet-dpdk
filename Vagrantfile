@@ -1,7 +1,9 @@
 $init = <<SCRIPT
   apt-get update
-  DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential fakeroot debhelper autoconf automake libssl-dev graphviz python-all libtool git tmux vim python3-pip python3-sphinx graphviz autoconf automake bzip2 debhelper dh-autoreconf libssl-dev libtool openssl procps python-all python-zopeinterface module-assistant dkms make libc6-dev python-argparse uuid-runtime netbase kmod  iproute2 openvswitch-switch libpcap-dev libnuma-dev libmicrohttpd-dev python3-pip python3-matplotlib htop wireshark-gtk python3 linux-tools-generic lynx gdb evince nginx libre2-dev openvswitch-switch
-  pip install alabaster
+  DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential fakeroot debhelper autoconf automake libssl-dev graphviz python-all libtool git tmux vim python3-pip python3-sphinx graphviz autoconf automake bzip2 debhelper dh-autoreconf libssl-dev libtool openssl procps python-all module-assistant dkms make libc6-dev python-argparse uuid-runtime netbase kmod  iproute2 openvswitch-switch libpcap-dev libnuma-dev libmicrohttpd-dev python3-matplotlib htop wireshark-gtk python3 linux-tools-generic lynx gdb evince nginx libre2-dev openvswitch-switch python2 ninja-build meson python3-pyelftools
+  curl 'https://raw.githubusercontent.com/pypa/get-pip/20.3.4/get-pip.py' -o - | python2
+  python2 -m pip install alabaster
+  curl 'https://bootstrap.pypa.io/get-pip.py' -o - | python3
   python3 -m pip install --upgrade pip
 SCRIPT
 
@@ -16,15 +18,17 @@ $mininet = <<SCRIPT
 SCRIPT
 
 $dpdk = <<SCRIPT
-  wget http://fast.dpdk.org/rel/dpdk-19.11.1.tar.xz
-  tar xf dpdk-19.11.1.tar.xz
-  rm dpdk-19.11.1.tar.xz
-  pushd dpdk-stable-19.11.1
-  make config T=x86_64-native-linuxapp-gcc O=x86_64-native-linuxapp-gcc
+  VER=21.11.2
+  wget http://fast.dpdk.org/rel/dpdk-${VER}.tar.xz
+  tar xf dpdk-${VER}.tar.xz
+  rm dpdk-${VER}.tar.xz
+  pushd dpdk-stable-${VER}
   echo "export RTE_SDK=$(pwd)" >> ~/.profile
   echo "export RTE_TARGET=x86_64-native-linuxapp-gcc" >> ~/.profile
-  cd x86_64-native-linuxapp-gcc
-  make -j 4
+  meson build
+  cd build
+  ninja
+  sudo ninja install
   popd
 SCRIPT
 
@@ -58,14 +62,12 @@ $cleanup = <<SCRIPT
 SCRIPT
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "ubuntu/focal64"
+  config.vm.box = "ubuntu/jammy64"
 
   config.vm.provider "virtualbox" do |v|
 	v.cpus = 3
 	v.memory = 3072
   end
-
-  config.vm.synced_folder "../../conf", "/conf"
 
   ## Provisioning
   config.vm.provision :shell, :inline => $init
