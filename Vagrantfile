@@ -21,6 +21,7 @@ $dpdk = <<SCRIPT
   rm dpdk-19.11.1.tar.xz
   pushd dpdk-stable-19.11.1
   make config T=x86_64-native-linuxapp-gcc O=x86_64-native-linuxapp-gcc
+  sed -i 's#CONFIG_RTE_MACHINE="native"#CONFIG_RTE_MACHINE="default"#' x86_64-native-linuxapp-gcc/.config
   echo "export RTE_SDK=$(pwd)" >> ~/.profile
   echo "export RTE_TARGET=x86_64-native-linuxapp-gcc" >> ~/.profile
   cd x86_64-native-linuxapp-gcc
